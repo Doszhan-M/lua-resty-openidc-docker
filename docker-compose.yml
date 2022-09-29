@@ -13,10 +13,10 @@ services:
 
     labels:
       - traefik.enable=true 
-      - traefik.http.routers.kong.entrypoints=websecure
-      - traefik.http.routers.kong.rule=Host(`pk-local.backend`) && PathPrefix(`/api/web/accounts/`)
-      - traefik.http.routers.kong.tls=true 
-      - traefik.http.services.kong.loadbalancer.server.port=80
+      - traefik.http.routers.oidc.entrypoints=websecure
+      - traefik.http.routers.oidc.rule=Host(`pk-local.backend`) && PathPrefix(`/api/web/accounts/`)
+      - traefik.http.routers.oidc.tls=true 
+      - traefik.http.services.oidc.loadbalancer.server.port=80
 
 networks:
   default:
