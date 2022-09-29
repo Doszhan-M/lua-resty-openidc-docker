@@ -1,0 +1,73 @@
+docker build -t openresty . -f ./openresty.dockerfile
+
+ 
+server {
+       listen   80;
+       server_name  pk-local.backend;
+        access_log /var/log/nginx/test_pk_access.log;
+        error_log /var/log/nginx/test_pk_error.log;
+
+        client_max_body_size 7M;
+       
+          access_by_lua '
+         local opts = {
+           redirect_uri_path = "/api/web/accounts/sso_token/",
+           discovery = "https://id.uchet.kz/.idp/.well-known/openid-configuration",
+           client_id = "pk2-test",
+           client_secret = "4aHDNQL~~bTYVoGCz1jQECE_O3",
+           redirect_uri_scheme = "http",
+           logout_path = "/logout",
+           redirect_after_logout_uri = "http://host.docker.internal:3333/auth/realms/myrealm/protocol/openid-connect/logout?redirect_uri=http://localhost/",
+           redirect_after_logout_with_id_token_hint = false,
+           session_contents = {id_token=true},
+           scope = "openid email profile"
+         }
+         -- call introspect for OAuth 2.0 Bearer Access Token validation
+         local res, err = require("resty.openidc").authenticate(opts)
+
+         if err then
+           ngx.status = 403
+           ngx.say(err)
+           ngx.exit(ngx.HTTP_FORBIDDEN)
+         end
+      ';
+ 
+      # I disabled caching so the browser won't cache the site.
+      expires           0;
+      add_header        Cache-Control private; 
+ 
+      location / {
+        proxy_pass http://pk_backend:8000;
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }    
+      
+      # redirect server error pages to the static page /40x.html
+      #
+      error_page 404 /404.html;
+          location = /40x.html {
+      }
+ 
+      # redirect server error pages to the static page /50x.html
+      #
+      error_page 500 502 503 504 /50x.html;
+          location = /50x.html {
+            root /usr/share/nginx/html;
+      }
+}
+ 
+ 
+
+accept_none_alg = false,
+accept_unsupported_alg = false,
+renew_access_token_on_expiry = true,
+access_token_expires_in = 3600,
+revoke_tokens_on_logout = true,
+edirect_uri_scheme = "https",
+logout_path = "/logout",
+redirect_after_logout_uri = "/"
+
+        local res, err = require("resty.openidc").authenticate(opts)

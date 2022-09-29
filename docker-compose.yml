@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+
+  openresty:
+    image: openresty
+    # ports:
+    #   # - "80:80"
+    #   - "443:443"
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./certs/:/etc/certs/:ro 
+
+    labels:
+      - traefik.enable=true 
+      - traefik.http.routers.kong.entrypoints=websecure
+      - traefik.http.routers.kong.rule=Host(`pk-local.backend`) && PathPrefix(`/api/web/accounts/`)
+      - traefik.http.routers.kong.tls=true 
+      - traefik.http.services.kong.loadbalancer.server.port=80
+
+networks:
+  default:
+    external:
+      name: pk_network
